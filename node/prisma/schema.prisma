@@ -1,0 +1,87 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model accepted_exam {
+  id              Int               @id @default(autoincrement())
+  name            String            @db.VarChar(254)
+  slug            String?           @db.VarChar(254)
+  university_exam university_exam[]
+}
+
+model city {
+  id         Int          @id @default(autoincrement())
+  name       String       @db.VarChar(50)
+  state_id   Int?
+  slug       String?      @db.VarChar(254)
+  university university[]
+}
+
+model course {
+  id        Int     @id @default(autoincrement())
+  name      String  @db.VarChar(50)
+  stream_id Int
+  slug      String? @db.VarChar(254)
+
+  @@index([stream_id], map: "stream")
+}
+
+model state {
+  id         Int          @id @default(autoincrement())
+  name       String       @db.VarChar(50)
+  country_id Int          @default(1)
+  slug       String?      @db.VarChar(254)
+  university university[]
+}
+
+model stream {
+  id                Int                 @id @default(autoincrement())
+  name              String              @db.VarChar(50)
+  slug              String?             @db.VarChar(254)
+  university_course university_course[]
+}
+
+model university {
+  id                Int                 @id @default(autoincrement())
+  name              String              @db.VarChar(50)
+  city_id           Int?
+  state_id          Int?
+  program_type      String?             @db.VarChar(254)
+  college_type      String?             @db.VarChar(254)
+  slug              String?             @db.VarChar(254)
+  city              city?               @relation(fields: [city_id], references: [id], map: "city")
+  state             state?              @relation(fields: [state_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "state")
+  university_course university_course[]
+  university_exam   university_exam[]
+
+  @@index([city_id], map: "city")
+  @@index([state_id], map: "state")
+}
+
+model university_course {
+  id            Int         @id @default(autoincrement())
+  university_id Int?
+  course_id     Int?
+  stream_id     Int?
+  stream        stream?     @relation(fields: [stream_id], references: [id], map: "stream")
+  university    university? @relation(fields: [university_id], references: [id], map: "university")
+
+  @@index([stream_id], map: "stream")
+  @@index([university_id], map: "university")
+}
+
+model university_exam {
+  id            Int            @id @default(autoincrement())
+  university_id Int?
+  exam_id       Int?
+  accepted_exam accepted_exam? @relation(fields: [exam_id], references: [id], map: "exam")
+  university    university?    @relation(fields: [university_id], references: [id], map: "unversity")
+
+  @@index([exam_id], map: "exam")
+  @@index([university_id], map: "unversity")
+}
